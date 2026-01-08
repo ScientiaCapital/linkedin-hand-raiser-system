@@ -1,0 +1,17 @@
+{
+  "week1": {
+    "monday": "week1/EC-001-material-costs.md",
+    "wednesday": "week1/HV-001-labor-burden.md",
+    "friday": "week1/PL-001-admin-burden.md"
+  },
+  "week2": {
+    "monday": "week1/EC-001-material-costs.md",
+    "wednesday": "week1/HV-001-labor-burden.md",
+    "friday": "week1/PL-001-admin-burden.md"
+  },
+  "default": {
+    "monday": "week1/EC-001-material-costs.md",
+    "wednesday": "week1/HV-001-labor-burden.md",
+    "friday": "week1/PL-001-admin-burden.md"
+  }
+}
