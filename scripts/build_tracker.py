@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 LinkedIn Hand-Raiser Engagement Tracker Builder
-Generates production-grade Excel workbook with formulas, formatting, and sample data pre-built
+Generates production-grade Excel workbook with formulas, formatting, and sample data pre-built.
+Includes video tracking for Runway AI and Loom videos.
 """
 
 from openpyxl import Workbook
@@ -32,12 +33,13 @@ def create_tracker_workbook():
     return output_path
 
 def create_post_performance_sheet(wb):
-    """TAB 1: Post Performance Tracker"""
+    """TAB 1: Post Performance Tracker with Video Tracking"""
     ws = wb.create_sheet("Post Performance Tracker", 0)
 
-    # Define headers
+    # Define headers (NEW: Video columns F-I added)
     headers = [
         'Post ID', 'Date Posted', 'Vertical', 'Pain Point', 'Post Type',
+        'Video Type', 'Video Style', 'Video URL', 'Video Cost',  # NEW VIDEO COLUMNS
         'Impressions', 'Likes', 'Comments', 'Shares', 'DMs Received',
         'Videos Sent', 'Demos Booked', 'Notes',
         'Total Engagement', 'Engagement %', 'Conversion %',
@@ -51,20 +53,29 @@ def create_post_performance_sheet(wb):
         cell.fill = PatternFill(start_color="4A90E2", end_color="4A90E2", fill_type="solid")
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Sample data (6 posts)
+    # Sample data (6 posts with video tracking)
+    # Columns: Post ID, Date, Vertical, Pain Point, Post Type,
+    #          Video Type, Video Style, Video URL, Video Cost,
+    #          Impressions, Likes, Comments, Shares, DMs, Videos Sent, Demos, Notes
     sample_data = [
         ['EC-001', datetime(2025, 1, 13), 'Electrical', 'Material Cost Overruns', 'Hand-Raiser',
-         1247, 63, 8, 2, 5, 5, 2, 'High engagement on copper price spike'],
-        ['EC-002', datetime(2025, 1, 15), 'Electrical', 'Labor Burden', 'Hand-Raiser',
-         892, 34, 3, 1, 2, 2, 0, 'Lower engagement, may need refinement'],
+         'Runway', 'Pain Point Illustration', 'https://app.runwayml.com/video/ec001', 2.50,
+         1247, 63, 8, 2, 5, 5, 2, 'Runway video: copper price spike animation - high engagement'],
+        ['EC-002', datetime(2025, 1, 15), 'Electrical', 'Labor Burden Blindness', 'Hand-Raiser',
+         'None', 'N/A', '', 0,
+         892, 34, 3, 1, 2, 2, 0, 'Text-only baseline test for comparison'],
         ['HV-001', datetime(2025, 1, 15), 'HVAC', 'Labor Burden Blindness', 'Hand-Raiser',
-         1583, 87, 12, 4, 8, 7, 3, 'Strong resonance on "80% done" angle'],
+         'Loom', 'Personal Demo', 'https://loom.com/share/hv001demo', 0,
+         1583, 87, 12, 4, 8, 7, 3, 'Personal Loom explanation - strong resonance on "80% done"'],
         ['PL-001', datetime(2025, 1, 17), 'Plumbing', 'Admin Time Waste', 'Hand-Raiser',
-         1129, 56, 6, 2, 4, 4, 1, 'Office manager empathy angle worked'],
+         'Runway', 'Text Overlay', 'https://app.runwayml.com/video/pl001', 1.75,
+         1129, 56, 6, 2, 4, 4, 1, 'Runway text animation: "3 HOURS A DAY" - office manager empathy'],
         ['HV-002', datetime(2025, 1, 20), 'HVAC', 'Material Cost Overruns', 'Hand-Raiser',
-         743, 28, 2, 0, 1, 1, 0, 'Cross-tested electrical pain point, lower fit'],
+         'Runway', 'Abstract Motion', 'https://app.runwayml.com/video/hv002', 2.00,
+         743, 28, 2, 0, 1, 1, 0, 'Abstract motion graphics - lower fit for HVAC audience'],
         ['EC-003', datetime(2025, 1, 22), 'Electrical', 'Cash Flow Delays', 'Educational',
-         1034, 41, 5, 1, 3, 3, 1, 'Testing new pain point angle']
+         'None', 'N/A', '', 0,
+         1034, 41, 5, 1, 3, 3, 1, 'Testing new pain point angle without video']
     ]
 
     # Write sample data (Rows 2-7)
@@ -73,35 +84,45 @@ def create_post_performance_sheet(wb):
             ws.cell(row=row_num, column=col_num, value=value)
 
     # Add formulas for calculated columns
+    # NEW COLUMN MAPPING (shifted by 4):
+    # R = Total Engagement, S = Engagement %, T = Conversion %
+    # U = Video→Demo %, V = Cost/Engage, W = Tier, X = Status
     for row in range(2, 8):  # Rows 2-7
-        # Column N: Total Engagement (SUM of Likes + Comments + Shares)
-        ws[f'N{row}'] = f'=SUM(G{row}:I{row})'
+        # Column R: Total Engagement (SUM of Likes + Comments + Shares) - was N, now R
+        # Likes=K, Comments=L, Shares=M
+        ws[f'R{row}'] = f'=SUM(K{row}:M{row})'
 
-        # Column O: Engagement % (Total Engagement / Impressions * 100)
-        ws[f'O{row}'] = f'=IF(F{row}>0,N{row}/F{row}*100,0)'
-        ws[f'O{row}'].number_format = '0.0"%"'
+        # Column S: Engagement % (Total Engagement / Impressions * 100) - was O, now S
+        # Impressions=J
+        ws[f'S{row}'] = f'=IF(J{row}>0,R{row}/J{row}*100,0)'
+        ws[f'S{row}'].number_format = '0.0"%"'
 
-        # Column P: Conversion % ((Comments + DMs) / Impressions * 100)
-        ws[f'P{row}'] = f'=IF(F{row}>0,(H{row}+J{row})/F{row}*100,0)'
-        ws[f'P{row}'].number_format = '0.0"%"'
+        # Column T: Conversion % ((Comments + DMs) / Impressions * 100) - was P, now T
+        # Comments=L, DMs=N
+        ws[f'T{row}'] = f'=IF(J{row}>0,(L{row}+N{row})/J{row}*100,0)'
+        ws[f'T{row}'].number_format = '0.0"%"'
 
-        # Column Q: Video→Demo % (Demos / Videos * 100)
-        ws[f'Q{row}'] = f'=IF(K{row}>0,L{row}/K{row}*100,0)'
-        ws[f'Q{row}'].number_format = '0.0"%"'
+        # Column U: Video→Demo % (Demos / Videos Sent * 100) - was Q, now U
+        # Videos Sent=O, Demos=P
+        ws[f'U{row}'] = f'=IF(O{row}>0,P{row}/O{row}*100,0)'
+        ws[f'U{row}'].number_format = '0.0"%"'
 
-        # Column R: Cost/Engage (placeholder for future paid spend)
-        ws[f'R{row}'] = 0
+        # Column V: Cost/Engage (Video Cost / Total Engagement) - was R, now V
+        # Video Cost=I, Total Engagement=R
+        ws[f'V{row}'] = f'=IF(R{row}>0,I{row}/R{row},0)'
+        ws[f'V{row}'].number_format = '$0.00'
 
-        # Column S: Performance Tier (based on Engagement %)
-        ws[f'S{row}'] = f'=IF(O{row}>=5,"🟢 High",IF(O{row}>=2,"🟡 Medium","🔴 Low"))'
+        # Column W: Performance Tier (based on Engagement %) - was S, now W
+        ws[f'W{row}'] = f'=IF(S{row}>=5,"🟢 High",IF(S{row}>=2,"🟡 Medium","🔴 Low"))'
 
-        # Column T: Status (pipeline stage indicator)
-        ws[f'T{row}'] = f'=IF(L{row}>0,"✅ Closed",IF(K{row}>0,"📹 Video Sent",IF(J{row}>0,"💬 Engaged","👀 Posted")))'
+        # Column X: Status (pipeline stage indicator) - was T, now X
+        # Demos=P, Videos Sent=O, DMs=N
+        ws[f'X{row}'] = f'=IF(P{row}>0,"✅ Closed",IF(O{row}>0,"📹 Video Sent",IF(N{row}>0,"💬 Engaged","👀 Posted")))'
 
     # Apply conditional formatting
-    # Engagement % heatmap (Column O)
+    # Engagement % heatmap (Column S, was O)
     ws.conditional_formatting.add(
-        'O2:O100',
+        'S2:S100',
         ColorScaleRule(
             start_type='num', start_value=0, start_color='EA4335',
             mid_type='num', mid_value=5, mid_color='FBBC04',
@@ -109,32 +130,43 @@ def create_post_performance_sheet(wb):
         )
     )
 
-    # Performance Tier highlighting (Column S)
+    # Performance Tier highlighting (Column W, was S)
     ws.conditional_formatting.add(
-        'S2:S100',
+        'W2:W100',
         CellIsRule(operator='containsText', formula=['"High"'], fill=PatternFill(start_color='D4EDDA', fill_type='solid'))
     )
     ws.conditional_formatting.add(
-        'S2:S100',
+        'W2:W100',
         CellIsRule(operator='containsText', formula=['"Medium"'], fill=PatternFill(start_color='FFF3CD', fill_type='solid'))
     )
     ws.conditional_formatting.add(
-        'S2:S100',
+        'W2:W100',
         CellIsRule(operator='containsText', formula=['"Low"'], fill=PatternFill(start_color='F8D7DA', fill_type='solid'))
     )
 
-    # Demo booked highlight (Column L)
+    # Demo booked highlight (Column P, was L)
     ws.conditional_formatting.add(
-        'L2:L100',
+        'P2:P100',
         CellIsRule(operator='greaterThan', formula=['0'], fill=PatternFill(start_color='34A853', fill_type='solid'), font=Font(color='FFFFFF', bold=True))
     )
 
-    # Adjust column widths
+    # Video Type highlighting
+    ws.conditional_formatting.add(
+        'F2:F100',
+        CellIsRule(operator='containsText', formula=['"Runway"'], fill=PatternFill(start_color='E8D5E8', fill_type='solid'))
+    )
+    ws.conditional_formatting.add(
+        'F2:F100',
+        CellIsRule(operator='containsText', formula=['"Loom"'], fill=PatternFill(start_color='D5E8D5', fill_type='solid'))
+    )
+
+    # Adjust column widths (updated for new columns)
     column_widths = {
         'A': 10, 'B': 12, 'C': 12, 'D': 20, 'E': 12,
-        'F': 12, 'G': 8, 'H': 10, 'I': 8, 'J': 12,
-        'K': 12, 'L': 12, 'M': 35, 'N': 12, 'O': 12,
-        'P': 12, 'Q': 12, 'R': 12, 'S': 12, 'T': 15
+        'F': 12, 'G': 22, 'H': 35, 'I': 10,  # NEW VIDEO COLUMNS
+        'J': 12, 'K': 8, 'L': 10, 'M': 8, 'N': 12,
+        'O': 12, 'P': 12, 'Q': 35, 'R': 12, 'S': 12,
+        'T': 12, 'U': 12, 'V': 12, 'W': 12, 'X': 15
     }
     for col, width in column_widths.items():
         ws.column_dimensions[col].width = width
@@ -160,8 +192,18 @@ def create_post_performance_sheet(wb):
     ws.add_data_validation(dv_type)
     dv_type.add('E2:E100')
 
+    # NEW: Video Type dropdown (Column F)
+    dv_video_type = DataValidation(type="list", formula1='"None,Loom,Runway"', allow_blank=False)
+    ws.add_data_validation(dv_video_type)
+    dv_video_type.add('F2:F100')
+
+    # NEW: Video Style dropdown (Column G)
+    dv_video_style = DataValidation(type="list", formula1='"N/A,Personal Demo,Abstract Motion,Pain Point Illustration,Text Overlay,Before-After"', allow_blank=False)
+    ws.add_data_validation(dv_video_style)
+    dv_video_style.add('G2:G100')
+
 def create_dashboard_sheet(wb):
-    """TAB 2: Vertical Performance Dashboard"""
+    """TAB 2: Vertical Performance Dashboard with Video Analytics"""
     ws = wb.create_sheet("Dashboard", 1)
 
     # Section 1: Vertical Performance Summary
@@ -179,31 +221,31 @@ def create_dashboard_sheet(wb):
     for row_num, vertical in enumerate(verticals, 3):
         ws.cell(row=row_num, column=1, value=vertical)
 
-    # Add formulas for Electrical (Row 3)
+    # Formulas for Electrical (Row 3) - UPDATED COLUMN REFS
     ws['B3'] = '=COUNTIF(\'Post Performance Tracker\'!C:C,"Electrical")'
-    ws['C3'] = '=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!O:O),0)'
+    ws['C3'] = '=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!S:S),0)'
     ws['C3'].number_format = '0.0"%"'
-    ws['D3'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!J:J)'
-    ws['E3'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!K:K)'
-    ws['F3'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!L:L)'
+    ws['D3'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!N:N)'
+    ws['E3'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!O:O)'
+    ws['F3'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Electrical",\'Post Performance Tracker\'!P:P)'
 
-    # Add formulas for HVAC (Row 4)
+    # Formulas for HVAC (Row 4)
     ws['B4'] = '=COUNTIF(\'Post Performance Tracker\'!C:C,"HVAC")'
-    ws['C4'] = '=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!O:O),0)'
+    ws['C4'] = '=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!S:S),0)'
     ws['C4'].number_format = '0.0"%"'
-    ws['D4'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!J:J)'
-    ws['E4'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!K:K)'
-    ws['F4'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!L:L)'
+    ws['D4'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!N:N)'
+    ws['E4'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!O:O)'
+    ws['F4'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"HVAC",\'Post Performance Tracker\'!P:P)'
 
-    # Add formulas for Plumbing (Row 5)
+    # Formulas for Plumbing (Row 5)
     ws['B5'] = '=COUNTIF(\'Post Performance Tracker\'!C:C,"Plumbing")'
-    ws['C5'] = '=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!O:O),0)'
+    ws['C5'] = '=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!S:S),0)'
     ws['C5'].number_format = '0.0"%"'
-    ws['D5'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!J:J)'
-    ws['E5'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!K:K)'
-    ws['F5'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!L:L)'
+    ws['D5'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!N:N)'
+    ws['E5'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!O:O)'
+    ws['F5'] = '=SUMIF(\'Post Performance Tracker\'!C:C,"Plumbing",\'Post Performance Tracker\'!P:P)'
 
-    # Add TOTAL row formulas (Row 6)
+    # TOTAL row formulas (Row 6)
     ws['B6'] = '=SUM(B3:B5)'
     ws['C6'] = '=AVERAGE(C3:C5)'
     ws['C6'].number_format = '0.0"%"'
@@ -215,64 +257,115 @@ def create_dashboard_sheet(wb):
     for col in range(1, 7):
         ws.cell(row=6, column=col).font = Font(bold=True)
 
-    # Section 2: Pain Point Performance
-    ws['A9'] = 'PAIN POINT PERFORMANCE'
+    # ========================================
+    # NEW SECTION: Video Performance Analysis
+    # ========================================
+    ws['A9'] = 'VIDEO PERFORMANCE ANALYSIS'
     ws['A9'].font = Font(bold=True, size=14)
+
+    video_headers = ['Video Type', 'Posts', 'Avg Engage%', 'Total DMs', 'Demos', 'Lift vs None']
+    for col_num, header in enumerate(video_headers, 1):
+        cell = ws.cell(row=10, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="9B59B6", end_color="9B59B6", fill_type="solid")
+        cell.font = Font(bold=True, color="FFFFFF")
+
+    video_types = ['None', 'Loom', 'Runway']
+    for row_num, vtype in enumerate(video_types, 11):
+        ws.cell(row=row_num, column=1, value=vtype)
+        ws[f'B{row_num}'] = f'=COUNTIF(\'Post Performance Tracker\'!F:F,"{vtype}")'
+        ws[f'C{row_num}'] = f'=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!F:F,"{vtype}",\'Post Performance Tracker\'!S:S),0)'
+        ws[f'C{row_num}'].number_format = '0.0"%"'
+        ws[f'D{row_num}'] = f'=SUMIF(\'Post Performance Tracker\'!F:F,"{vtype}",\'Post Performance Tracker\'!N:N)'
+        ws[f'E{row_num}'] = f'=SUMIF(\'Post Performance Tracker\'!F:F,"{vtype}",\'Post Performance Tracker\'!P:P)'
+        # Lift vs None (compare to row 11 which is "None")
+        if vtype == 'None':
+            ws[f'F{row_num}'] = '-'
+        else:
+            ws[f'F{row_num}'] = f'=IF(C11>0,C{row_num}/C11-1,0)'
+            ws[f'F{row_num}'].number_format = '+0.0%;-0.0%'
+
+    # Video Style Performance (Runway Only)
+    ws['A16'] = 'RUNWAY VIDEO STYLE PERFORMANCE'
+    ws['A16'].font = Font(bold=True, size=14)
+
+    style_headers = ['Video Style', 'Posts', 'Avg Engage%', 'DMs', 'Demos']
+    for col_num, header in enumerate(style_headers, 1):
+        cell = ws.cell(row=17, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="E74C3C", end_color="E74C3C", fill_type="solid")
+        cell.font = Font(bold=True, color="FFFFFF")
+
+    styles = ['Abstract Motion', 'Pain Point Illustration', 'Text Overlay', 'Before-After']
+    for row_num, style in enumerate(styles, 18):
+        ws.cell(row=row_num, column=1, value=style)
+        ws[f'B{row_num}'] = f'=COUNTIF(\'Post Performance Tracker\'!G:G,"{style}")'
+        ws[f'C{row_num}'] = f'=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!G:G,"{style}",\'Post Performance Tracker\'!S:S),0)'
+        ws[f'C{row_num}'].number_format = '0.0"%"'
+        ws[f'D{row_num}'] = f'=SUMIF(\'Post Performance Tracker\'!G:G,"{style}",\'Post Performance Tracker\'!N:N)'
+        ws[f'E{row_num}'] = f'=SUMIF(\'Post Performance Tracker\'!G:G,"{style}",\'Post Performance Tracker\'!P:P)'
+
+    # ========================================
+    # Section: Pain Point Performance
+    # ========================================
+    ws['A24'] = 'PAIN POINT PERFORMANCE'
+    ws['A24'].font = Font(bold=True, size=14)
 
     pain_headers = ['Pain Point', 'Posts Count', 'Avg Engage%', 'Demos']
     for col_num, header in enumerate(pain_headers, 1):
-        cell = ws.cell(row=10, column=col_num, value=header)
+        cell = ws.cell(row=25, column=col_num, value=header)
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color="4A90E2", end_color="4A90E2", fill_type="solid")
         cell.font = Font(bold=True, color="FFFFFF")
 
-    pain_points = ['Material Cost Overruns', 'Labor Burden Blindness', 'Admin Time Waste']
-    for row_num, pain in enumerate(pain_points, 11):
+    pain_points = ['Material Cost Overruns', 'Labor Burden Blindness', 'Admin Time Waste', 'Cash Flow Delays', 'Job Profitability Opacity']
+    for row_num, pain in enumerate(pain_points, 26):
         ws.cell(row=row_num, column=1, value=pain)
         ws[f'B{row_num}'] = f'=COUNTIF(\'Post Performance Tracker\'!D:D,"{pain}")'
-        ws[f'C{row_num}'] = f'=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!D:D,"{pain}",\'Post Performance Tracker\'!O:O),0)'
+        ws[f'C{row_num}'] = f'=IFERROR(AVERAGEIF(\'Post Performance Tracker\'!D:D,"{pain}",\'Post Performance Tracker\'!S:S),0)'
         ws[f'C{row_num}'].number_format = '0.0"%"'
-        ws[f'D{row_num}'] = f'=SUMIF(\'Post Performance Tracker\'!D:D,"{pain}",\'Post Performance Tracker\'!L:L)'
+        ws[f'D{row_num}'] = f'=SUMIF(\'Post Performance Tracker\'!D:D,"{pain}",\'Post Performance Tracker\'!P:P)'
 
-    # Section 3: Weekly Trends
-    ws['A16'] = 'WEEKLY TRENDS'
-    ws['A16'].font = Font(bold=True, size=14)
-
-    trend_headers = ['Week', 'Posts Published', 'Total DMs', 'Demos Booked']
-    for col_num, header in enumerate(trend_headers, 1):
-        cell = ws.cell(row=17, column=col_num, value=header)
-        cell.font = Font(bold=True)
-        cell.fill = PatternFill(start_color="4A90E2", end_color="4A90E2", fill_type="solid")
-        cell.font = Font(bold=True, color="FFFFFF")
-
-    weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
-    for row_num, week in enumerate(weeks, 18):
-        ws.cell(row=row_num, column=1, value=week)
-        # Formulas would need specific date ranges - placeholder zeros for now
-        ws.cell(row=row_num, column=2, value=0)
-        ws.cell(row=row_num, column=3, value=0)
-        ws.cell(row=row_num, column=4, value=0)
-
-    # Section 4: Conversion Funnel
-    ws['A23'] = 'CONVERSION FUNNEL'
-    ws['A23'].font = Font(bold=True, size=14)
+    # ========================================
+    # Section: Conversion Funnel
+    # ========================================
+    ws['A33'] = 'CONVERSION FUNNEL'
+    ws['A33'].font = Font(bold=True, size=14)
 
     funnel_stages = [
-        ('Total Impressions', '=SUM(\'Post Performance Tracker\'!F:F)'),
-        ('Total Engagement', '=SUM(\'Post Performance Tracker\'!N:N)'),
-        ('DMs Received', '=SUM(\'Post Performance Tracker\'!J:J)'),
-        ('Videos Sent', '=SUM(\'Post Performance Tracker\'!K:K)'),
-        ('Demos Booked', '=SUM(\'Post Performance Tracker\'!L:L)')
+        ('Total Impressions', '=SUM(\'Post Performance Tracker\'!J:J)'),
+        ('Total Engagement', '=SUM(\'Post Performance Tracker\'!R:R)'),
+        ('DMs Received', '=SUM(\'Post Performance Tracker\'!N:N)'),
+        ('Videos Sent', '=SUM(\'Post Performance Tracker\'!O:O)'),
+        ('Demos Booked', '=SUM(\'Post Performance Tracker\'!P:P)')
     ]
 
-    ws['A24'] = 'Stage'
-    ws['B24'] = 'Count'
-    ws['A24'].font = Font(bold=True)
-    ws['B24'].font = Font(bold=True)
+    ws['A34'] = 'Stage'
+    ws['B34'] = 'Count'
+    ws['A34'].font = Font(bold=True)
+    ws['B34'].font = Font(bold=True)
 
-    for row_num, (stage, formula) in enumerate(funnel_stages, 25):
+    for row_num, (stage, formula) in enumerate(funnel_stages, 35):
         ws.cell(row=row_num, column=1, value=stage)
         ws.cell(row=row_num, column=2, value=formula)
+
+    # ========================================
+    # Section: Video ROI Summary
+    # ========================================
+    ws['A42'] = 'VIDEO ROI SUMMARY'
+    ws['A42'].font = Font(bold=True, size=14)
+
+    ws['A43'] = 'Total Video Cost'
+    ws['B43'] = '=SUM(\'Post Performance Tracker\'!I:I)'
+    ws['B43'].number_format = '$0.00'
+
+    ws['A44'] = 'Cost per Demo (Video Posts)'
+    ws['B44'] = '=IF(SUM(\'Post Performance Tracker\'!P:P)>0,B43/SUMIF(\'Post Performance Tracker\'!F:F,"<>None",\'Post Performance Tracker\'!P:P),0)'
+    ws['B44'].number_format = '$0.00'
+
+    ws['A45'] = 'Video Engagement Premium'
+    ws['B45'] = '=IF(C11>0,(C12+C13)/2/C11-1,0)'
+    ws['B45'].number_format = '+0.0%;-0.0%'
 
     # Adjust column widths
     ws.column_dimensions['A'].width = 25
@@ -366,5 +459,7 @@ def create_response_tracker_sheet(wb):
 
 if __name__ == "__main__":
     print("🚀 Building LinkedIn Hand-Raiser Engagement Tracker...")
+    print("   📊 Adding video tracking columns (Runway, Loom)")
+    print("   📈 Adding video performance dashboard")
     create_tracker_workbook()
     print("\n✅ Complete! Open the file to start tracking.")

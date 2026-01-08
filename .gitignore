@@ -16,6 +16,11 @@ __pycache__/
 # Environment variables
 .env
 .env.local
+.env.production
+
+# Generated Runway videos (large files)
+videos/runway/*.mp4
+videos/runway/*.webm
 
 # IDE
 .idea/

@@ -1,64 +1,63 @@
 # LinkedIn Hand-Raiser System
 
-Async demand gen for Coperniq. Post → Engage → Video → Demo.
-
-## The System
-
-**Target:** MEP+E contractors (Electrical, HVAC, Plumbing)
-
-**Method:** Hand-raiser posts surface high-intent prospects. They comment/DM. You send a 5-min Loom. They book a demo.
-
-**Why it works:** No cold outreach. They come to you.
+**GTME for B2B SaaS.** AI-generated videos + voice narration for LinkedIn. Built with Claude Code in one session.
 
 ---
 
-## Quick Commands
+## What It Does
+
+Turn LinkedIn posts into an A/B testing machine:
+
+| Version | Stack |
+|---------|-------|
+| **A** | Runway video + Cartesia voice |
+| **B** | Runway video + text overlay |
+| **C** | Text only (control) |
+
+Post → Track → Learn → Iterate.
+
+---
+
+## The Tech
+
+```
+Runway Gen-3      → AI video generation
+Cartesia Sonic-2  → Voice narration
+Python + openpyxl → Engagement tracking
+Claude Code       → Built it all
+```
+
+---
+
+## Quick Start
 
 ```bash
-# Post to LinkedIn (copies to clipboard, opens browser)
-source venv/bin/activate
-python scripts/post.py              # Today's scheduled post
-python scripts/post.py EC-001       # Specific post
+# Generate both versions for A/B testing
+python scripts/generate_video.py --post EC-001 --style pain-point --both
 
-# Rebuild Excel tracker
+# Rebuild Excel tracker with video analytics
 python scripts/build_tracker.py
 ```
 
 ---
 
-## Project Structure
+## Dashboard Tracks
 
-```
-├── posts/
-│   ├── week1/                 # Post copy by week
-│   ├── response-scripts.md    # Reply templates
-│   └── schedule.json          # Posting schedule
-├── videos/
-│   └── loom_script_template.md
-├── tracking/
-│   └── linkedin_engagement_tracker.xlsx
-└── scripts/
-    ├── post.py                # CLI poster
-    └── build_tracker.py       # Excel generator
-```
+- Video type performance (Runway vs Loom vs None)
+- Style effectiveness (Abstract vs Pain Point vs Text)
+- Cost per engagement, engagement lift
+- Full conversion funnel
 
 ---
 
-## Workflow
+## Why
 
-| When | Action |
-|------|--------|
-| Mon/Wed/Fri 8am | `python scripts/post.py` → paste → post |
-| Same day | Reply to comments, DM video to hand-raisers |
-| Daily | Update Excel tracker with engagement data |
+Cold outreach is dead. Make prospects come to you.
+
+1. Post pain-point content → They self-identify
+2. Send AI video → Stand out instantly
+3. Book demo → They're already warm
 
 ---
 
-## Metrics
-
-| Stage | Target |
-|-------|--------|
-| Engagement Rate | >5% |
-| DM Conversion | >2% |
-| Video → Demo | >30% |
-| Demo → Close | >25% |
+*More details in [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)*

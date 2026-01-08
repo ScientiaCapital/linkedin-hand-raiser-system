@@ -1,0 +1,21 @@
+# LinkedIn Hand-Raiser System - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Excel workbook generation
+openpyxl>=3.1.0
+
+# Clipboard functionality for post.py
+pyperclip>=1.8.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# HTTP requests for Runway/Cartesia APIs
+requests>=2.31.0
+httpx>=0.27.0
+
+# Async file I/O for voice generation
+aiofiles>=23.0.0
+
+# Audio/Video processing
+# Note: ffmpeg must be installed on system (brew install ffmpeg)
