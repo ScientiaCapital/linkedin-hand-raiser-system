@@ -1,6 +1,12 @@
 # Backlog - Future Ideas & Work
 
-**Last Updated:** 2025-01-07
+**Last Updated:** 2025-01-07 (End of Day)
+
+## 🆕 Added Today
+
+- [ ] Week 2 combo post (cross-vertical)
+- [ ] Playwright full automation (if clipboard method works well, revisit)
+- [ ] Analytics scraping script (pull engagement data from LinkedIn)
 
 ## 📝 Content Ideas
 

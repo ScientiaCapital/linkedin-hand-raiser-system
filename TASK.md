@@ -1,28 +1,38 @@
 # Active Tasks
 
-**Last Updated:** 2025-01-07
+**Last Updated:** 2025-01-07 (End of Day)
 
-## 🔥 In Progress
+## ✅ Completed Today (Session 1)
 
-### [ ] Initial System Setup
+### Sprint 1: Project Setup
 - [x] Create project directory structure
-- [x] Build Excel tracker with formulas
+- [x] Build Excel tracker with formulas (`tracking/linkedin_engagement_tracker.xlsx`)
 - [x] Create CLAUDE.md with Start Day Protocol
 - [x] Create workflow documents (TASK, PLANNING, BACKLOG)
-- [ ] Initialize Git repository
-- [ ] Create PROJECT_CONTEXT.md
+- [x] Initialize Git repository
+- [x] Push to GitHub: https://github.com/ScientiaCapital/linkedin-hand-raiser-system
+
+### Sprint 2: Content Launch
+- [x] Create Week 1 posts (EC-001, HV-001, PL-001)
+- [x] Create response scripts with objection handlers
+- [x] Create Loom video script template
+
+### Sprint 2.5: Post Scheduler CLI
+- [x] Create `scripts/post.py` CLI tool
+- [x] Create `posts/schedule.json` config
+- [x] Simplify README.md to GTME format
 
 ---
 
-## 📋 Today's Priorities
+## 📋 Tomorrow's Priorities
 
-1. **Complete project setup** - Finish all documentation files
-2. **LinkedIn profile audit** - Update with promise-based positioning
-3. **First hand-raiser post** - Draft EC-001 for Electrical vertical
+1. **Schedule first 3 posts** - Use `python scripts/post.py` for Mon/Wed/Fri
+2. **LinkedIn profile optimization** - Update headline for MEP contractors
+3. **Add 50 connections** - Start with Electrical vertical
 
 ---
 
-## ⏳ Pending
+## ⏳ Pending (Next Sprint)
 
 ### [ ] LinkedIn Profile Optimization
 - Update headline with clear value prop for MEP contractors
@@ -34,19 +44,6 @@
 - Add 50 HVAC contractors
 - Add 50 Plumbing contractors
 
-### [ ] Content Creation
-- Draft first 3 hand-raiser posts (1 per vertical)
-- Create Loom video response template
-
----
-
-## ✅ Completed Today
-
-- [x] Created `scripts/build_tracker.py`
-- [x] Generated `tracking/linkedin_engagement_tracker.xlsx`
-- [x] Created `docs/README.md`
-- [x] Created `CLAUDE.md` with Start Day Protocol
-
 ---
 
 ## 🚫 Blocked
@@ -57,5 +54,6 @@ _None currently_
 
 ## Notes
 
+- Post CLI: `python scripts/post.py` copies post to clipboard + opens LinkedIn
 - Excel tracker has 6 sample posts pre-loaded for reference
-- Using virtual environment for Python dependencies (`source venv/bin/activate`)
+- Using virtual environment: `source venv/bin/activate`
