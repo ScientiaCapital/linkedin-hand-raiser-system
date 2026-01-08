@@ -51,13 +51,7 @@ Async LinkedIn demand gen system for Coperniq using promise-based hand-raiser po
 | Video→Demo Rate | >30% | TBD |
 | Demo→Close Rate | >25% | TBD |
 
-## Next Steps
 
-- [ ] Update LinkedIn profile with promise-based positioning
-- [ ] Add 150 MEP contractors (50 per vertical)
-- [ ] Schedule 3 hand-raiser posts (Week 1)
-- [ ] Build Loom video template
-- [ ] Track first week's engagement data
 
 ---
 
