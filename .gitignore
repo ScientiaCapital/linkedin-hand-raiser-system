@@ -18,9 +18,35 @@ __pycache__/
 .env.local
 .env.production
 
-# Generated Runway videos (large files)
-videos/runway/*.mp4
-videos/runway/*.webm
+# ALL VIDEO FILES - Coperniq IP Protection
+# Never commit any video content to git
+videos/**/*.mp4
+videos/**/*.webm
+videos/**/*.mov
+videos/**/*.avi
+videos/**/*.mkv
+videos/runway/
+videos/loom/
+videos/final/
+
+# Audio files (voice recordings)
+audio/
+*.wav
+*.mp3
+*.m4a
+*.aac
+
+# Generated content with company IP
+tracking/*.xlsx
+!tracking/.gitkeep
+
+# Post content (may contain Coperniq messaging)
+posts/drafts/
+posts/*.txt
+!posts/.gitkeep
+
+# Claude Code
+.claude/
 
 # IDE
 .idea/
