@@ -1,59 +1,64 @@
 # LinkedIn Hand-Raiser System
 
-## Overview
-Async LinkedIn demand gen system for Coperniq using promise-based hand-raiser posts + 5-minute video responses.
+Async demand gen for Coperniq. Post → Engage → Video → Demo.
 
-**Goal:** Replace cold outreach with high-intent inbound leads from MEP+E contractors.
+## The System
 
-## System Components
+**Target:** MEP+E contractors (Electrical, HVAC, Plumbing)
 
-### 1. Tracking (`/tracking`)
-- `linkedin_engagement_tracker.xlsx` - Main performance dashboard
-- Track: Post engagement, DM conversion, video→demo rates, pipeline
+**Method:** Hand-raiser posts surface high-intent prospects. They comment/DM. You send a 5-min Loom. They book a demo.
 
-### 2. Posts (`/posts`)
-- Draft posts before publishing
-- Archive published posts with engagement data
-- Template library for each vertical (Electrical, HVAC, Plumbing)
-
-### 3. Videos (`/videos`)
-- Loom script templates for responses
-- Video link archive
-- Demo conversion tracking
-
-### 4. Scripts (`/scripts`)
-- `build_tracker.py` - Generates Excel tracker
-- Future automation scripts as needed
-
-## Quick Start
-
-1. **Update tracker daily** (5 min):
-   - Add new post data from LinkedIn analytics
-   - Log DMs/comments received
-   - Track video sends + demo bookings
-
-2. **Weekly review** (15 min, Monday 9am):
-   - Review Dashboard tab
-   - Identify highest-performing pain points
-   - Plan next 3 posts (Mon/Wed/Fri)
-
-3. **Video response protocol**:
-   - Respond to DMs within 24 hours
-   - Use Loom templates from `/videos`
-   - Track in Response Tracker tab
-
-## Success Metrics
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| Post Engagement Rate | >5% | TBD |
-| DM Conversion Rate | >2% | TBD |
-| Video→Demo Rate | >30% | TBD |
-| Demo→Close Rate | >25% | TBD |
-
-
+**Why it works:** No cold outreach. They come to you.
 
 ---
 
-**Last Updated:** 2025-01-07
-**Owner:** Tim Kipper, Sr BDR @ Coperniq
+## Quick Commands
+
+```bash
+# Post to LinkedIn (copies to clipboard, opens browser)
+source venv/bin/activate
+python scripts/post.py              # Today's scheduled post
+python scripts/post.py EC-001       # Specific post
+
+# Rebuild Excel tracker
+python scripts/build_tracker.py
+```
+
+---
+
+## Project Structure
+
+```
+├── posts/
+│   ├── week1/                 # Post copy by week
+│   ├── response-scripts.md    # Reply templates
+│   └── schedule.json          # Posting schedule
+├── videos/
+│   └── loom_script_template.md
+├── tracking/
+│   └── linkedin_engagement_tracker.xlsx
+└── scripts/
+    ├── post.py                # CLI poster
+    └── build_tracker.py       # Excel generator
+```
+
+---
+
+## Workflow
+
+| When | Action |
+|------|--------|
+| Mon/Wed/Fri 8am | `python scripts/post.py` → paste → post |
+| Same day | Reply to comments, DM video to hand-raisers |
+| Daily | Update Excel tracker with engagement data |
+
+---
+
+## Metrics
+
+| Stage | Target |
+|-------|--------|
+| Engagement Rate | >5% |
+| DM Conversion | >2% |
+| Video → Demo | >30% |
+| Demo → Close | >25% |
