@@ -19,9 +19,10 @@ import json
 import asyncio
 import argparse
 import subprocess
+import base64
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 import httpx
 from dotenv import load_dotenv
@@ -47,35 +48,57 @@ CARTESIA_API_URL = "https://api.cartesia.ai"
 
 
 # ========================================
-# Video Style Templates
+# Video Style Templates (Load from JSON)
 # ========================================
 
-VIDEO_STYLES = {
-    "abstract": {
-        "name": "Abstract Motion",
-        "template": "Abstract motion graphics visualization: {key_phrase}. Flowing geometric shapes, professional blue and orange color palette, smooth camera movement, cinematic lighting. 5 seconds, high quality.",
-        "best_for": ["attention hooks", "brand awareness", "pattern interrupt"],
-        "voice_script": "short"  # Use short excerpt for voice
-    },
-    "pain-point": {
-        "name": "Pain Point Illustration",
-        "template": "Dramatic visualization: {pain_point}. Show the frustration and cost visually. Dark moody lighting transitioning to bright solution. Construction or industrial setting, realistic style. 5 seconds, cinematic.",
-        "best_for": ["emotional connection", "problem awareness", "contractor empathy"],
-        "voice_script": "full"  # Use full post text for voice
-    },
-    "text-overlay": {
-        "name": "Text Overlay",
-        "template": "Kinetic typography animation: Words appearing with dramatic impact - '{key_words}'. Bold sans-serif font, dynamic zoom and movement effects, blurred construction backdrop. 5 seconds, professional.",
-        "best_for": ["message reinforcement", "statistic highlights", "call-to-action"],
-        "voice_script": "key_phrase"  # Just the key phrase
-    },
-    "before-after": {
-        "name": "Before-After Transformation",
-        "template": "Split screen transformation: Left side shows chaos and frustration (messy paperwork, stressed contractor), right side shows calm and organized (clean dashboard, happy team). Smooth transition between both. 5 seconds.",
-        "best_for": ["solution reveal", "value demonstration", "transformation stories"],
-        "voice_script": "full"
-    }
-}
+def load_video_styles() -> dict:
+    """Load video styles from JSON files in prompts/ directory."""
+    styles = {}
+    for json_file in PROMPTS_DIR.glob("*.json"):
+        try:
+            with open(json_file) as f:
+                style_data = json.load(f)
+                style_name = style_data.get("style", json_file.stem)
+                styles[style_name] = style_data
+        except Exception as e:
+            print(f"⚠️  Failed to load {json_file}: {e}")
+
+    # Fallback to hardcoded if no JSON files found
+    if not styles:
+        styles = {
+            "abstract": {
+                "name": "Abstract Motion",
+                "template": "Abstract motion graphics: {key_phrase}. Flowing electrical current, HVAC airflow patterns. Blue, orange, copper palette. 8 seconds, cinematic.",
+                "best_for": ["attention hooks"],
+                "duration": 8,
+                "voice_script": "short"
+            },
+            "pain-point": {
+                "name": "Pain Point Illustration",
+                "template": "Dramatic visualization: {pain_point}. Electrical contractor or HVAC tech stressed, service van in background. Dark to hope transition. 8 seconds, cinematic.",
+                "best_for": ["emotional connection"],
+                "duration": 8,
+                "voice_script": "full"
+            },
+            "text-overlay": {
+                "name": "Text Overlay",
+                "template": "Kinetic typography: '{key_words}'. Bold font, blurred service van background. Blue and orange. 8 seconds.",
+                "best_for": ["message reinforcement"],
+                "duration": 8,
+                "voice_script": "key_phrase"
+            },
+            "before-after": {
+                "name": "Before-After Transformation",
+                "template": "Split screen: Left stressed trade pro, right organized with tablet. Smooth morph. 8 seconds.",
+                "best_for": ["solution reveal"],
+                "duration": 8,
+                "voice_script": "full"
+            }
+        }
+    return styles
+
+# Load styles at module import
+VIDEO_STYLES = load_video_styles()
 
 
 # ========================================
@@ -289,6 +312,85 @@ class RunwayClient:
             )
             return response.json()
 
+    async def image_to_video(
+        self,
+        image_path: str,
+        prompt: str,
+        duration: int = 10,
+        ratio: str = "1280:720"
+    ) -> dict:
+        """Generate video from image (for chaining/extending).
+
+        Uses the last frame of a previous video to create smooth continuation.
+
+        Args:
+            image_path: Path to PNG/JPG image (or data URI)
+            prompt: Motion description
+            duration: 2-10 seconds
+            ratio: Aspect ratio
+
+        Returns:
+            dict with video URL
+        """
+        # Convert image to data URI if it's a file path
+        if image_path.startswith("data:"):
+            image_data = image_path
+        else:
+            with open(image_path, "rb") as f:
+                img_bytes = f.read()
+            ext = Path(image_path).suffix.lower()
+            mime = "image/png" if ext == ".png" else "image/jpeg"
+            b64 = base64.b64encode(img_bytes).decode()
+            image_data = f"data:{mime};base64,{b64}"
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{self.base_url}/v1/image_to_video",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "X-Runway-Version": "2024-11-06",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "gen4_turbo",  # Better for image-to-video
+                    "promptImage": image_data,
+                    "position": "first",  # Use image as opening frame
+                    "promptText": prompt[:1000],
+                    "ratio": ratio,
+                    "duration": min(duration, 10),  # Max 10s for image-to-video
+                }
+            )
+
+            if response.status_code not in [200, 201]:
+                return {"status": "error", "error": response.text}
+
+            result = response.json()
+            task_id = result.get('id')
+            print(f"🎬 Image-to-video task started: {task_id}")
+
+            # Poll for completion
+            for attempt in range(60):
+                await asyncio.sleep(5)
+                status_response = await client.get(
+                    f"{self.base_url}/v1/tasks/{task_id}",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "X-Runway-Version": "2024-11-06",
+                    }
+                )
+                status_data = status_response.json()
+                status = status_data.get('status', 'UNKNOWN')
+
+                if status == 'SUCCEEDED':
+                    print(f"✅ Continuation clip generated!")
+                    return status_data
+                elif status == 'FAILED':
+                    return {"status": "error", "error": status_data.get('error')}
+                elif status in ['PENDING', 'RUNNING']:
+                    print(f"   Extending: {status} ({attempt * 5}s)")
+
+            return {"status": "error", "error": "Timeout"}
+
 
 # ========================================
 # Video Generator
@@ -421,6 +523,8 @@ Generated: {datetime.now().isoformat()}
             "-i", str(audio_path),
             "-c:v", "copy",
             "-c:a", "aac",
+            "-map", "0:v:0",
+            "-map", "1:a:0",
             "-shortest",
             str(output_path)
         ]
@@ -430,7 +534,6 @@ Generated: {datetime.now().isoformat()}
             print(f"✅ Merged video+audio: {output_path}")
         except subprocess.CalledProcessError as e:
             print(f"⚠️  ffmpeg merge failed: {e.stderr.decode()}")
-            # Fallback: just copy video
             import shutil
             shutil.copy(video_path, output_path)
         except FileNotFoundError:
@@ -440,11 +543,171 @@ Generated: {datetime.now().isoformat()}
 
         return output_path
 
+    def extract_last_frame(self, video_path: Path) -> Path:
+        """Extract the last frame from a video for chaining."""
+        output_path = video_path.with_suffix('.png')
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-sseof", "-0.5",  # Start 0.5s before end
+            "-i", str(video_path),
+            "-frames:v", "1",  # Just one frame
+            "-q:v", "2",  # High quality
+            str(output_path)
+        ]
+
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+            print(f"📸 Extracted last frame: {output_path}")
+            return output_path
+        except Exception as e:
+            print(f"⚠️  Frame extraction failed: {e}")
+            return None
+
+    def concat_videos_crossfade(
+        self,
+        video_paths: List[Path],
+        output_path: Path,
+        crossfade_duration: float = 0.5
+    ) -> Path:
+        """Concatenate videos with crossfade transitions."""
+        if len(video_paths) == 1:
+            import shutil
+            shutil.copy(video_paths[0], output_path)
+            return output_path
+
+        # Build ffmpeg filter for crossfade
+        # For 2 clips: [0:v][1:v]xfade=transition=fade:duration=0.5:offset=X[v]
+        filter_parts = []
+        current_offset = 0
+
+        for i in range(len(video_paths) - 1):
+            # Get video duration (approximate 8s per clip)
+            clip_duration = 8
+            offset = current_offset + clip_duration - crossfade_duration
+
+            if i == 0:
+                filter_parts.append(
+                    f"[0:v][1:v]xfade=transition=fade:duration={crossfade_duration}:offset={offset}[v{i}]"
+                )
+            else:
+                filter_parts.append(
+                    f"[v{i-1}][{i+1}:v]xfade=transition=fade:duration={crossfade_duration}:offset={offset}[v{i}]"
+                )
+            current_offset = offset
+
+        # Build command
+        cmd = ["ffmpeg", "-y"]
+        for vp in video_paths:
+            cmd.extend(["-i", str(vp)])
+
+        if len(video_paths) == 2:
+            filter_complex = f"[0:v][1:v]xfade=transition=fade:duration={crossfade_duration}:offset=7.5[v]"
+            cmd.extend(["-filter_complex", filter_complex, "-map", "[v]"])
+        else:
+            # For 3+ clips, use concat demuxer instead (simpler)
+            list_file = output_path.with_suffix('.txt')
+            with open(list_file, 'w') as f:
+                for vp in video_paths:
+                    f.write(f"file '{vp}'\n")
+            cmd = [
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                "-i", str(list_file), "-c", "copy", str(output_path)
+            ]
+
+        cmd.extend(["-c:v", "libx264", "-preset", "fast", str(output_path)])
+
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+            print(f"✅ Videos concatenated with crossfade: {output_path}")
+            return output_path
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️  Concat failed: {e.stderr.decode()[:200]}")
+            # Fallback: just use first video
+            import shutil
+            shutil.copy(video_paths[0], output_path)
+            return output_path
+
+    async def generate_chained_video(
+        self,
+        prompts: List[str],
+        output_path: Path,
+        duration_per_clip: int = 8
+    ) -> Path:
+        """Generate a longer video by chaining multiple clips.
+
+        Uses the Last Keyframe Method:
+        1. Generate first clip with text-to-video
+        2. Extract last frame
+        3. Generate continuation with image-to-video
+        4. Repeat until all prompts used
+        5. Concatenate with crossfade
+
+        Args:
+            prompts: List of prompts for each segment
+            output_path: Final output path
+            duration_per_clip: Duration per clip (max 8 for text, 10 for image)
+
+        Returns:
+            Path to final concatenated video
+        """
+        if not self.runway:
+            print("⚠️  Runway not configured for chaining")
+            return output_path
+
+        clip_paths = []
+        temp_dir = VIDEOS_DIR / "temp"
+        temp_dir.mkdir(exist_ok=True)
+
+        print(f"\n🔗 Chaining {len(prompts)} clips for ~{len(prompts) * duration_per_clip}s video\n")
+
+        for i, prompt in enumerate(prompts):
+            print(f"\n📹 Generating clip {i+1}/{len(prompts)}...")
+            clip_path = temp_dir / f"clip_{i:02d}.mp4"
+
+            if i == 0:
+                # First clip: text-to-video
+                result = await self.runway.generate_video(prompt, duration=duration_per_clip)
+            else:
+                # Subsequent clips: image-to-video from last frame
+                last_frame = self.extract_last_frame(clip_paths[-1])
+                if last_frame and last_frame.exists():
+                    result = await self.runway.image_to_video(
+                        str(last_frame), prompt, duration=min(duration_per_clip, 10)
+                    )
+                else:
+                    # Fallback to text-to-video
+                    result = await self.runway.generate_video(prompt, duration=duration_per_clip)
+
+            # Download and save clip
+            if result.get("status") != "error":
+                video_url = result.get("output", [None])[0]
+                if video_url:
+                    async with httpx.AsyncClient(timeout=120.0) as client:
+                        video_response = await client.get(video_url)
+                        if video_response.status_code == 200:
+                            clip_path.write_bytes(video_response.content)
+                            clip_paths.append(clip_path)
+                            print(f"   ✅ Clip {i+1} saved")
+                        else:
+                            print(f"   ⚠️  Failed to download clip {i+1}")
+            else:
+                print(f"   ⚠️  Clip {i+1} failed: {result.get('error', 'Unknown')}")
+
+        # Concatenate all clips
+        if clip_paths:
+            return self.concat_videos_crossfade(clip_paths, output_path)
+        else:
+            print("⚠️  No clips generated")
+            return output_path
+
     async def generate(
         self,
         post_id: str,
         style: str,
         with_voice: bool = False,
+        chain_clips: int = 1,
+        duration: int = 8,
     ) -> dict:
         """Generate video for a post.
 
@@ -452,13 +715,17 @@ Generated: {datetime.now().isoformat()}
             post_id: Post ID (e.g., "EC-004")
             style: Video style (abstract, pain-point, text-overlay, before-after)
             with_voice: Whether to add Cartesia voice narration
+            chain_clips: Number of clips to chain (1 = single, 2+ = chained)
+            duration: Duration per clip in seconds
 
         Returns:
             dict with paths and metadata
         """
+        total_duration = chain_clips * duration
         print(f"\n{'='*50}")
         print(f"🎬 Generating video for {post_id}")
         print(f"   Style: {style}")
+        print(f"   Duration: ~{total_duration}s ({chain_clips} clip{'s' if chain_clips > 1 else ''} × {duration}s)")
         print(f"   Voice: {'Yes' if with_voice else 'No'}")
         print(f"{'='*50}\n")
 
@@ -480,8 +747,18 @@ Generated: {datetime.now().isoformat()}
         suffix = "_voice" if with_voice else "_silent"
         final_path = VIDEOS_DIR / "final" / f"{base_name}{suffix}.mp4"
 
-        # Generate video
-        await self.generate_video(prompt, video_raw_path)
+        # Generate video (single or chained)
+        if chain_clips > 1:
+            # Generate multiple prompts for chaining
+            chain_prompts = [prompt]
+            # Add continuation prompts
+            for i in range(1, chain_clips):
+                continuation = f"Continue smoothly: {post['key_phrase']}. Same visual style, same lighting. Slow camera movement. {duration} seconds."
+                chain_prompts.append(continuation)
+
+            await self.generate_chained_video(chain_prompts, video_raw_path, duration_per_clip=duration)
+        else:
+            await self.generate_video(prompt, video_raw_path)
 
         # Generate voice if requested
         if with_voice:
@@ -584,6 +861,20 @@ async def main():
         action="store_true",
         help="Generate both voice and no-voice versions for A/B testing"
     )
+    parser.add_argument(
+        "--chain",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Chain N clips together for longer video (e.g., --chain 2 for ~16s)"
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=8,
+        choices=[4, 6, 8],
+        help="Duration per clip in seconds (default: 8)"
+    )
 
     args = parser.parse_args()
 
@@ -610,10 +901,16 @@ async def main():
         print("🧪 A/B Test Mode: Generating both voice and silent versions\n")
 
         # Version A: With voice
-        result_voice = await generator.generate(args.post, args.style, with_voice=True)
+        result_voice = await generator.generate(
+            args.post, args.style, with_voice=True,
+            chain_clips=args.chain, duration=args.duration
+        )
 
         # Version B: Without voice
-        result_silent = await generator.generate(args.post, args.style, with_voice=False)
+        result_silent = await generator.generate(
+            args.post, args.style, with_voice=False,
+            chain_clips=args.chain, duration=args.duration
+        )
 
         print("\n" + "="*50)
         print("🧪 A/B TEST VIDEOS READY")
@@ -626,7 +923,10 @@ async def main():
     else:
         # Single version
         with_voice = args.voice and not args.no_voice
-        await generator.generate(args.post, args.style, with_voice=with_voice)
+        await generator.generate(
+            args.post, args.style, with_voice=with_voice,
+            chain_clips=args.chain, duration=args.duration
+        )
 
 
 if __name__ == "__main__":
