@@ -235,20 +235,47 @@ class RunwayClient:
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "gen3a_turbo",  # Gen-3 Alpha Turbo (fast + cost-effective)
+                    "model": "veo3.1_fast",  # Veo 3.1 Fast (quick generation)
                     "promptText": prompt[:1000],
                     "ratio": ratio,
                     "duration": duration,
                 }
             )
 
-            if response.status_code != 200:
+            if response.status_code not in [200, 201]:
                 print(f"⚠️  Runway API error: {response.text}")
-                return {"status": "error", "message": response.text}
+                return {"status": "error", "error": response.text}
 
             result = response.json()
-            print(f"🎬 Runway task started: {result.get('id', 'unknown')}")
-            return result
+            task_id = result.get('id')
+            print(f"🎬 Runway task started: {task_id}")
+
+            # Poll for completion
+            print("⏳ Waiting for video generation...")
+            for attempt in range(60):  # Max 5 minutes
+                await asyncio.sleep(5)
+                status_response = await client.get(
+                    f"{self.base_url}/v1/tasks/{task_id}",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "X-Runway-Version": "2024-11-06",
+                    }
+                )
+                status_data = status_response.json()
+                status = status_data.get('status', 'UNKNOWN')
+
+                if status == 'SUCCEEDED':
+                    print(f"✅ Video generated!")
+                    return status_data
+                elif status == 'FAILED':
+                    print(f"❌ Generation failed: {status_data.get('error', 'Unknown error')}")
+                    return {"status": "error", "error": status_data.get('error')}
+                elif status in ['PENDING', 'RUNNING']:
+                    print(f"   Status: {status} ({attempt * 5}s elapsed)")
+                else:
+                    print(f"   Status: {status}")
+
+            return {"status": "error", "error": "Timeout waiting for video"}
 
     async def get_task_status(self, task_id: str) -> dict:
         """Check status of video generation task."""
@@ -360,8 +387,29 @@ Generated: {datetime.now().isoformat()}
 
         result = await self.runway.generate_video(prompt)
 
-        # In production, would download video from result["video_url"]
-        output_path.write_text(f"Placeholder video\nPrompt: {prompt}\nURL: {result['video_url']}")
+        # Check for errors
+        if result.get("status") == "error":
+            print(f"❌ Video generation failed: {result.get('error', 'Unknown error')}")
+            output_path.write_text(f"ERROR: {result.get('error', 'Unknown error')}\nPrompt: {prompt}")
+            return output_path
+
+        # Download the video from the output URL
+        video_url = result.get("output", [None])[0]
+        if video_url:
+            print(f"📥 Downloading video from: {video_url[:50]}...")
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                video_response = await client.get(video_url)
+                if video_response.status_code == 200:
+                    # Change extension to .mp4
+                    output_path = output_path.with_suffix('.mp4')
+                    output_path.write_bytes(video_response.content)
+                    print(f"✅ Video saved: {output_path} ({len(video_response.content):,} bytes)")
+                else:
+                    print(f"⚠️  Failed to download video: {video_response.status_code}")
+                    output_path.write_text(f"Download failed\nURL: {video_url}")
+        else:
+            print(f"⚠️  No video URL in response")
+            output_path.write_text(f"No video URL\nResponse: {json.dumps(result, indent=2)}")
 
         return output_path
 

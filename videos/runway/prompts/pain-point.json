@@ -1,7 +1,10 @@
 {
   "style": "pain-point",
   "name": "Pain Point Illustration",
-  "template": "Dramatic visualization: {pain_point}. Show the frustration and cost visually. Dark moody lighting transitioning to bright solution. Construction or industrial setting, realistic style. 5 seconds, cinematic.",
-  "best_for": ["emotional connection", "problem awareness", "contractor empathy"],
-  "voice_script": "full"
+  "template": "Dramatic visualization: {pain_point}. Electrical contractor or HVAC technician looking stressed, staring at paperwork or phone. Service van with tools visible in background. Dark moody lighting transitioning slowly to hope. Professional trade worker who owns their business, NOT a general contractor. 8 seconds, cinematic, realistic.",
+  "best_for": ["emotional connection", "problem awareness", "self-performing contractor empathy"],
+  "target_trades": ["electrical", "HVAC", "plumbing", "solar", "roofing"],
+  "duration": 8,
+  "voice_script": "full",
+  "avoid": ["hard hats", "scaffolding", "high-rise buildings", "office managers", "GC imagery"]
 }

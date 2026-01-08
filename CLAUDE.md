@@ -85,3 +85,102 @@ source venv/bin/activate
 # Regenerate tracker
 python scripts/build_tracker.py
 ```
+
+---
+
+## AI Video Generation (Runway + Cartesia)
+
+### API Configuration
+
+Environment variables in `.env`:
+```bash
+RUNWAY_API_KEY=key_xxx          # From https://dev.runwayml.com/
+CARTESIA_API_KEY=sk_car_xxx     # From https://cartesia.ai
+```
+
+### Runway (Video)
+
+| Setting | Value |
+|---------|-------|
+| API Base | `https://api.dev.runwayml.com` |
+| Version Header | `X-Runway-Version: 2024-11-06` |
+| Auth | `Authorization: Bearer {key}` |
+
+**Models:**
+- `veo3.1_fast` - Fast text-to-video (recommended)
+- `veo3.1` - Higher quality text-to-video
+- `gen4_turbo` - Image-to-video only
+
+**Endpoints:**
+- `POST /v1/text_to_video` - Generate from text
+- `POST /v1/image_to_video` - Generate from image
+- `GET /v1/tasks/{id}` - Poll for completion
+
+**Duration:** 4, 6, or 8 seconds
+**Ratios:** `1280:720`, `720:1280`, `1920:1080`
+
+### Cartesia (Voice)
+
+| Setting | Value |
+|---------|-------|
+| API Base | `https://api.cartesia.ai` |
+| Version Header | `Cartesia-Version: 2025-04-16` |
+| Auth | `Authorization: Bearer {key}` |
+
+**Models:**
+- `sonic-3` - Latest with emotional tagging (recommended)
+- `sonic-2` - Legacy, lower latency
+
+**Features:**
+- Emotional tagging: `[laughter]` inline
+- 42 languages supported
+- ~90ms time-to-first-audio
+
+**Default Voice:** `a0e99841-438c-4a64-b679-ae501e7d6091`
+
+### Video Generation Commands
+
+```bash
+# Generate A/B test videos (voice + silent)
+python scripts/generate_video.py --post EC-001 --style pain-point --both
+
+# Voice only
+python scripts/generate_video.py --post EC-001 --style pain-point --voice
+
+# Silent only
+python scripts/generate_video.py --post EC-001 --style text-overlay --no-voice
+
+# List styles
+python scripts/generate_video.py --list-styles
+
+# List voices
+python scripts/generate_video.py --list-voices
+```
+
+### Video Styles
+
+| Style | Use Case |
+|-------|----------|
+| `pain-point` | Emotional visualization of problem |
+| `text-overlay` | Kinetic typography with key words |
+| `abstract` | Motion graphics, attention hooks |
+| `before-after` | Transformation/solution reveal |
+
+### A/B Testing Framework
+
+| Version | Stack | Schedule |
+|---------|-------|----------|
+| A | Runway video + Cartesia voice | Monday |
+| B | Runway video + text overlay | Wednesday |
+| C | Text only (control) | Friday |
+
+### Output Locations
+
+- Raw videos: `videos/runway/`
+- Final videos: `videos/runway/final/`
+- Voice audio: `videos/runway/audio/`
+- Prompt templates: `videos/runway/prompts/`
+
+### Full Documentation
+
+See `docs/API_INTEGRATION.md` for complete API reference.

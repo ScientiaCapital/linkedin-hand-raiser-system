@@ -1,7 +1,14 @@
 {
   "style": "before-after",
   "name": "Before-After Transformation",
-  "template": "Split screen transformation: Left side shows chaos and frustration (messy paperwork, stressed contractor), right side shows calm and organized (clean dashboard, happy team). Smooth transition between both. 5 seconds.",
+  "template": "Split screen transformation: Left shows {pain} - electrician or HVAC tech stressed over paperwork, messy van, cash flow anxiety. Right shows {solution} - same trade pro relaxed, organized truck, clear job visibility on tablet. Smooth morph transition. 8 seconds, realistic, hopeful.",
   "best_for": ["solution reveal", "value demonstration", "transformation stories"],
-  "voice_script": "full"
+  "target_trades": ["electrical", "HVAC", "plumbing", "solar", "roofing"],
+  "duration": 8,
+  "voice_script": "full",
+  "variables": {
+    "pain": "the problem state",
+    "solution": "the desired outcome"
+  },
+  "avoid": ["office workers", "corporate settings", "GC job sites"]
 }

@@ -1,7 +1,10 @@
 {
   "style": "text-overlay",
   "name": "Text Overlay",
-  "template": "Kinetic typography animation: Words appearing with dramatic impact - '{key_words}'. Bold sans-serif font, dynamic zoom and movement effects, blurred construction backdrop. 5 seconds, professional.",
+  "template": "Kinetic typography: Words appearing with impact - '{key_words}'. Bold sans-serif font, dramatic zoom. Background: blurred service van, electrical panel, or HVAC unit. Colors: professional blue and orange. Trade-focused, NOT corporate. 8 seconds, professional.",
   "best_for": ["message reinforcement", "statistic highlights", "call-to-action"],
-  "voice_script": "key_phrase"
+  "target_trades": ["electrical", "HVAC", "plumbing", "solar", "roofing"],
+  "duration": 8,
+  "voice_script": "key_phrase",
+  "avoid": ["office settings", "generic stock footage", "GC imagery"]
 }

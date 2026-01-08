@@ -1,7 +1,10 @@
 {
   "style": "abstract",
   "name": "Abstract Motion",
-  "template": "Abstract motion graphics visualization: {key_phrase}. Flowing geometric shapes, professional blue and orange color palette, smooth camera movement, cinematic lighting. 5 seconds, high quality.",
-  "best_for": ["attention hooks", "brand awareness", "pattern interrupt"],
-  "voice_script": "short"
+  "template": "Abstract motion graphics: {key_phrase}. Flowing electrical current, HVAC airflow patterns, or water pipe networks visualized as glowing energy. Professional blue, orange, and copper color palette. Suggests efficiency and flow. Smooth camera movement. 8 seconds, cinematic, high quality.",
+  "best_for": ["attention hooks", "pattern interrupt", "professional energy"],
+  "target_trades": ["electrical", "HVAC", "plumbing", "solar"],
+  "duration": 8,
+  "voice_script": "short",
+  "avoid": ["generic corporate", "office buildings", "suits and ties"]
 }
