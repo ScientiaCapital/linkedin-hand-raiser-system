@@ -61,3 +61,4 @@ posts/*.txt
 # Temporary files
 *.tmp
 *.temp
+CLAUDE.md
